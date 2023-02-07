@@ -11,7 +11,16 @@ import { JsonRpcProvider } from '@mysten/sui.js';
 export default function Home() {
   const provider = new JsonRpcProvider();
   const { account, connected, signAndExecuteTransaction } = useWallet();
-  
+  const [formInput, updateFormInput] = useState<{
+    name: string;
+    url: string;
+    description: string;
+  }>({
+    name: "",
+    url: "",
+    description: "",
+  });
+  // const [message, setMessage] = useState('');
   const [tx, setTx] = useState('');
   const [nfts, setNfts] = useState<Array<{ id: string, name: string, url: string, description: string }>>([]);
 
@@ -48,7 +57,7 @@ export default function Home() {
 
   return (
     <div>
-      <p><b>Welcome to MoveBarter</b></p>
+      <p><b>Welcome to Movebarter</b></p>
       <p className="mt-4"><b>Module Path:</b> {PACKAGE_ID}::movebarter</p>
       <br></br>
     </div>
