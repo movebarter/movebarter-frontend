@@ -6,3 +6,10 @@ export interface NFTForm {
     propertyKey?: string;
     propertyVal?: string;
 }
+
+export interface NFT {
+    id: string,
+    name: string,
+    desc: string,
+    property: string,
+}

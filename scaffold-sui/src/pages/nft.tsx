@@ -1,8 +1,8 @@
 import { DAPP_ADDRESS } from "../config/constants";
 import { useWallet } from "@suiet/wallet-kit";
 import { useEffect, useState } from "react";
-import { NFTList, NFT } from "../components/NFTList";
 import { JsonRpcProvider } from '@mysten/sui.js';
+import { NFT } from "../types/NFT";
 
 export default function Home() {
     const provider = new JsonRpcProvider();
@@ -25,6 +25,7 @@ export default function Home() {
     // function remove_leading_zero(address: string) {
     //     return address.replace(/0x[0]+/, '0x')
     // }
+
     // 调用合约mint nft
     async function mint_nft() {
         console.log("mint nft____");
@@ -91,8 +92,8 @@ export default function Home() {
         })()
     }, [connected, tx])
 
-    // 测试用
-    // let nftList: NFT[] = [
+    // // 测试用
+    // let nfts: NFT[] = [
     //     {
     //         id: "1",
     //         name: "a",
@@ -145,7 +146,30 @@ export default function Home() {
                 </button>
             </div>
             <p className="mt-4"><b>Minted NFTs:</b></p>
-            <NFTList nftList={ nftList }/>
+            <table className="min-w-full table-auto">
+                <thead className="border-b">
+                <tr>
+                    <th scope="col" className="text-xl font-medium text-gray-900 px-6 py-4 text-lef">ID</th>
+                    <th scope="col" className="text-xl font-medium text-gray-900 px-6 py-4 text-lef">Name</th>
+                    <th scope="col" className="text-xl font-medium text-gray-900 px-6 py-4 text-lef">Description</th>
+                    <th scope="col" className="text-xl font-medium text-gray-900 px-6 py-4 text-lef">Properties</th>
+                </tr>
+                </thead>
+                <tbody>
+                {
+                    nftList.map(nft => {
+                        return (
+                            <tr key={nft.id} className="border-b">
+                                <td className="text-xl font-medium text-gray-900 text-center">{nft.id}</td>
+                                <td className="text-xl text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{nft.name}</td>
+                                <td className="text-xl text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{nft.desc}</td>
+                                <td className="text-xl text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{nft.property}</td>
+                            </tr>
+                        )
+                    })
+                }
+                </tbody>
+            </table>
         </div>
     )
 }

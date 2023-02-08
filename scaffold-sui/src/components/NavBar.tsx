@@ -9,7 +9,7 @@ export function NavBar() {
   return (
     <nav className="navbar py-4 px-4 bg-base-100">
       <div className="flex-1">
-        <a href="https://github.com/movebarter" target="_blank">
+        <a href="/" title="Home" target="_blank">
           MoveBarter
         </a>
         <ul className="menu menu-horizontal p-0 ml-5">

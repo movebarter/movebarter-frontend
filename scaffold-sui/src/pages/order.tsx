@@ -2,7 +2,6 @@ import { OrderForm } from "../types/Order"
 import { Order } from "../components/OrderList"
 import { useEffect, useState } from "react";
 import { useWallet } from "@suiet/wallet-kit";
-import { OrderList } from "../components/OrderList";
 import { JsonRpcProvider } from "@mysten/sui.js";
 import { DAPP_ADDRESS } from "../config/constants";
 
@@ -86,12 +85,8 @@ export default function Home() {
             packageObjectId: DAPP_ADDRESS,
             module: 'exchange',
             function: 'submit_order',
-            typeArguments: [
-
-            ],
-            arguments: [
-
-            ],
+            typeArguments: [],
+            arguments: [],
             // gasPayment: '',
             gasBudget: 30000,
         }
@@ -178,7 +173,38 @@ export default function Home() {
                 </button>
             </div>
             <p className="mt-4"><b>Order List:</b></p>
-            <OrderList orderList={ orderList }/>
+            <table className="min-w-full table-auto">
+                <thead className="border-b">
+                <tr>
+                    <th scope="col" className="text-xl font-medium text-gray-900 px-6 py-4 text-lef">ID</th>
+                    <th scope="col" className="text-xl font-medium text-gray-900 px-6 py-4 text-lef">Base NFT ID</th>
+                    <th scope="col" className="text-xl font-medium text-gray-900 px-6 py-4 text-lef">Target NFT ID</th>
+                    <th scope="col" className="text-xl font-medium text-gray-900 px-6 py-4 text-lef">Target NFT Key</th>
+                    <th scope="col" className="text-xl font-medium text-gray-900 px-6 py-4 text-lef">Target NFT Value</th>
+                </tr>
+                </thead>
+                <tbody>
+                {
+                    orderList.map(order => {
+                        return (
+                            <tr key={order.id} className="border-b">
+                                <td className="text-xl font-medium text-gray-900 text-center">{order.id}</td>
+                                <td className="text-xl text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{order.baseNFTId}</td>
+                                <td className="text-xl text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{order.targetNFTId}</td>
+                                <td className="text-xl text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{order.targetNFTPropertyKey}</td>
+                                <td className="text-xl text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{order.targetNFTPropertyValue}</td>
+                                <td>
+                                    <button>exchange nft id</button>
+                                </td>
+                                <td>
+                                    <button>take order</button>
+                                </td>
+                            </tr>
+                        )
+                    })
+                }
+                </tbody>
+            </table>
         </div>
     )
 }
