@@ -6,20 +6,17 @@ import { NFT } from "../types/NFT";
 
 export default function Home() {
     const provider = new JsonRpcProvider();
-    const { account, connected, signAndExecuteTransaction } = useWallet();
-    // const PACKAGE_ID = remove_leading_zero(DAPP_ADDRESS);
-    const PACKAGE_ID = DAPP_ADDRESS;
+    const { account, connected, signAndExecuteTransaction } = useWallet();    
+
     const [tx, setTx] = useState('');
     const [nftList, setNftList] = useState<Array<NFT>>([]);
     const [nFTFormInput, updateNFTFormInput] = useState<{
         name: string,
         description: string,
-        propertyKey: string,
         propertyVal: string,
     }>({
         name: "",
         description: "",
-        propertyKey: "",
         propertyVal: "",
     });
     // function remove_leading_zero(address: string) {
@@ -30,11 +27,10 @@ export default function Home() {
     async function mint_nft() {
         console.log("mint nft____");
         try {
-            const nft = build_nft()
             const data = await signAndExecuteTransaction({
                 transaction: {
                     kind: 'moveCall',
-                    data: nft,
+                    data: build_nft(),
                 },
             });
             console.log('mint success', data);
@@ -49,36 +45,38 @@ export default function Home() {
     async function fetch_all_nft() {
         console.log('fetch all nft')
         const objects = await provider.getObjectsOwnedByAddress(account!.address)
-        const nftIds = objects.filter(item => item.type === PACKAGE_ID + "::devnet_nft::DevNetNFT").map(item => item.objectId);
+        console.log("objects", objects)
+        const nftIds = objects.filter(item => item.type === DAPP_ADDRESS + "::exchange::Nft").map(item => item.objectId);
+        console.log('nftIds', nftIds)
         const nftObjects = await provider.getObjectBatch(nftIds)
+        console.log('nftIds', nftIds)
         const nftList = nftObjects.filter(item => item.status === "Exists").map(item => {
             let res: NFT = {
                 id: item.details.data.fields.id.id,
-                name: item.details.data.fields.name,
-                desc: item.details.data.fields.desc,
-                property: item.details.data.fields.property,
+                name: String.fromCharCode(...item.details.data.fields.name),
+                desc: String.fromCharCode(...item.details.data.fields.description),
+                property: String.fromCharCode(...item.details.data.fields.property_value),
               }
             return res
         })
+        console.log('nftList', nftList)
         setNftList(nftList)
     }
 
     // 根据表单信息构造钱包所需的结构体
     function build_nft() {
-        const { name, description, propertyKey, propertyVal } = nFTFormInput
-        const property = {
-            propertyKey: propertyKey,
-            propertyVal: propertyVal,
-        }
+        const { name, description, propertyVal } = nFTFormInput
+        
         return {
-            packageObjectId: PACKAGE_ID,
+            packageObjectId: DAPP_ADDRESS,
             module: 'exchange',
             function: 'mint',
             typeArguments: [],
             arguments: [
-              name,
-              description,
-              JSON.stringify(property),
+                name,
+                description,
+                propertyVal,
+
             ],
             gasBudget: 30000,
         };
@@ -91,17 +89,6 @@ export default function Home() {
           }
         })()
     }, [connected, tx])
-
-    // // 测试用
-    // let nfts: NFT[] = [
-    //     {
-    //         id: "1",
-    //         name: "a",
-    //         desc: "b",
-    //         property: "{key1: val1}"
-    //     }
-    // ]
-
     
     return (
         <div>
@@ -122,13 +109,6 @@ export default function Home() {
                     }
                 />
                 <br></br>
-                <input
-                    placeholder="Property Key"
-                    className="mt-8 p-4 input input-bordered input-primary w-full"
-                    onChange={(e) =>
-                        updateNFTFormInput({ ...nFTFormInput, propertyKey: e.target.value })
-                    }
-                />
                 <input
                     placeholder="Property Value"
                     className="mt-8 p-4 input input-bordered input-primary w-full"
