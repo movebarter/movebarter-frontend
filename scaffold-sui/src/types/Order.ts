@@ -1,8 +1,8 @@
 export interface Order {
     id: string,
     baseNFTId: string,
-    targetNFTId: string,
-    targetNFTPropertyValue: string,
+    targetNFTId?: string,
+    targetNFTPropertyValue?: string,
 }
 
 export interface OrderForm {
