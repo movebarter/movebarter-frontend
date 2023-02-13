@@ -7,12 +7,10 @@ import {
 
 export function NavBar() {
   return (
-    <nav className="navbar py-4 px-4 bg-base-100">
+    <nav className="navbar py-4 pr-2 bg-base-100">
       <div className="flex-1">
-        <a href="/" title="Home" target="_blank">
-          MoveBarter
-        </a>
-        <ul className="menu menu-horizontal p-0 ml-5">
+        <ul className="menu menu-horizontal p-0">
+          <NavItem href="/" title="Movebarter" />
           <NavItem href="/nft" title="NFT" />
           <NavItem href="/order" title="Order" />
           <li className="font-sans font-semibold text-lg">
@@ -21,6 +19,7 @@ export function NavBar() {
         </ul>
       </div>
       <SuiConnect />
+      
     </nav>
   );
 }

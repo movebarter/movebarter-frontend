@@ -43,13 +43,10 @@ export default function Home() {
 
     // 获取账户下所有的nft
     async function fetch_all_nft() {
-        console.log('fetch all nft')
+        console.log('fetch_all_nft')
         const objects = await provider.getObjectsOwnedByAddress(account!.address)
-        console.log("objects", objects)
         const nftIds = objects.filter(item => item.type === DAPP_ADDRESS + "::exchange::Nft").map(item => item.objectId);
-        console.log('nftIds', nftIds)
         const nftObjects = await provider.getObjectBatch(nftIds)
-        console.log('nftIds', nftIds)
         const nftList = nftObjects.filter(item => item.status === "Exists").map(item => {
             let res: NFT = {
                 id: item.details.data.fields.id.id,
@@ -59,7 +56,6 @@ export default function Home() {
               }
             return res
         })
-        console.log('nftList', nftList)
         setNftList(nftList)
     }
 
