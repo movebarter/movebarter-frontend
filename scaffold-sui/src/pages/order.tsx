@@ -169,7 +169,9 @@ export default function Home() {
         }
     }
 
-    function updateOrderTargetNFTID(order: Order, id: string) {
+    function updateOrderTargetNFTID(order: Order, id: string, idx: number) {
+        setIsOpenList(isOpenList.map((item, idx1) => idx1 == idx ? !item : item))
+
         order.targetNFTId = id;
     }
 
@@ -254,10 +256,10 @@ export default function Home() {
                                         }
                                     </button>
                                     {
-                                        isOpenList[idx] && nftList.filter(item => item.property === order.targetNFTPropertyValue).length > 0 && <div className="border border-blue-400 absolute flex flex-col items-start rounded-md p-2 mt-0.5 bg-white">
+                                        isOpenList[idx] && nftList.filter(item => item.property === order.targetNFTPropertyValue).length > 0 && <div className="border border-purple-400 absolute flex flex-col items-start rounded-md p-2 mt-0.5 bg-white">
                                             {nftList.filter(item => item.property === order.targetNFTPropertyValue).map((item) => (
-                                                <div key={item.id} className="flex justify-between cursor-pointer">
-                                                    <button className="text-sm" onClick={(e) => updateOrderTargetNFTID(order, item.id)}>{ReplaceChar(item.id)}</button>
+                                                <div key={item.id} className="flex justify-between cursor-pointer hover:bg-purple-200">
+                                                    <button className="text-sm text-purple-400" onClick={(e) => updateOrderTargetNFTID(order, item.id, idx)}>{ReplaceChar(item.id)}</button>
                                                 </div>
                                             ))}
                                         </div>
