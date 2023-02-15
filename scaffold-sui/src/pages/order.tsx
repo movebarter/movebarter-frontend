@@ -1,14 +1,19 @@
 import { GLOBAL_ORDER, DAPP_ADDRESS } from "../config/constants";
-import { OrderForm, Order } from "../types/Order"
+import { OrderForm, Order } from "../types/Order";
+import { NFT } from "../types/NFT";
 import { useEffect, useState } from "react";
 import { useWallet } from "@suiet/wallet-kit";
 import { JsonRpcProvider } from "@mysten/sui.js";
-
+import { AiOutlineCaretUp, AiOutlineCaretDown } from "react-icons/ai"; 
+import { ReplaceChar } from "../utils/util";
+import { isPromise } from "util/types";
 
 export default function Home() {
-
+    
     const provider = new JsonRpcProvider();
     const { account, connected, signAndExecuteTransaction } = useWallet();
+    const [isOpenList, setIsOpenList] = useState<Boolean[]>([]);
+    const [nftList, setNftList] = useState<Array<NFT>>([]);
     const [tx, setTx] = useState('');
     const [orderList, setOrderList] = useState<Array<Order>>([]);
     const [ orderFormInput, updateOrderFormInput ] = useState<OrderForm>({
@@ -79,9 +84,31 @@ export default function Home() {
             }
             return res
         });
-        
+        const isOpenList: Boolean[] = new Array(orderIdList.length);
+        for (let i = 0; i < orderIdList.length; i++) {
+            isOpenList[i] = false;
+        }
+        setIsOpenList(isOpenList);
         setOrderList(orderList);
         setTx('fetch');
+    }
+
+    // 获取账户下所有的nft
+    async function fetch_all_nft() {
+        console.log('fetch_all_nft')
+        const objects = await provider.getObjectsOwnedByAddress(account!.address)
+        const nftIds = objects.filter(item => item.type === DAPP_ADDRESS + "::exchange::Nft").map(item => item.objectId);
+        const nftObjects = await provider.getObjectBatch(nftIds)
+        const nftList = nftObjects.filter(item => item.status === "Exists").map(item => {
+            let res: NFT = {
+                id: item.details.data.fields.id.id,
+                name: String.fromCharCode(...item.details.data.fields.name),
+                desc: String.fromCharCode(...item.details.data.fields.description),
+                property: String.fromCharCode(...item.details.data.fields.property_value),
+              }
+            return res
+        })
+        setNftList(nftList)
     }
 
     function take_order(order: Order) {
@@ -90,7 +117,6 @@ export default function Home() {
             packageObjectId: DAPP_ADDRESS,
             module: 'exchange',
             function: 'take_order',
-            
             typeArguments: [],
             arguments: [
                 "0xff6a149024adb9b3dcf090555c31fb13d1813f0a",
@@ -143,10 +169,17 @@ export default function Home() {
         }
     }
 
+    function updateOrderTargetNFTID(order: Order, id: string, idx: number) {
+        setIsOpenList(isOpenList.map((item, idx1) => idx1 == idx ? !item : item))
+
+        order.targetNFTId = id;
+    }
+
     useEffect(() => {
         (async () => {
           if (connected) {
             fetch_all_orders()
+            fetch_all_nft()
           }
         })()
     }, [connected, tx])
@@ -195,17 +228,45 @@ export default function Home() {
                     <th scope="col" className="text-base font-medium text-gray-900 px-6 py-4 text-lef">Target NFT Value</th>
                     <th scope="col" className="text-base font-medium text-gray-900 px-6 py-4 text-lef"></th>
                     <th scope="col" className="text-base font-medium text-gray-900 px-6 py-4 text-lef"></th>
+                    <th scope="col" className="text-base font-medium text-gray-900 px-6 py-4 text-lef"></th>
                 </tr>
                 </thead>
                 <tbody>
                 {
-                    orderList.map(order => {
+                    orderList.map((order, idx) => {
                         return (
                             <tr key={order.id} className="border-b">
-                                <td className="text-sm font-medium text-gray-900 text-center">{order.id}</td>
-                                <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{order.baseNFTId}</td>
-                                <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{order.targetNFTId}</td>
-                                <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{order.targetNFTPropertyValue}</td>
+                                <td className="text-sm font-medium text-gray-900 text-center">{ReplaceChar(order.id)}</td>
+                                <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{ReplaceChar(order.baseNFTId)}</td>
+                                <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{ReplaceChar(order.targetNFTId ? order.targetNFTId: "")}</td>
+                                <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{order.targetNFTPropertyValue ? order.targetNFTPropertyValue : ""}</td>
+                                <td className="pr-2 text-center">
+                                    { order.targetNFTPropertyValue == "" ? <div></div> : <div>
+                                    <button 
+                                        className="bg-purple-500 flex text-white text-sm rounded-sm px-2 justify-between w-20"
+                                        onClick={() => setIsOpenList(isOpenList.map((item, idx1) => idx1 == idx ? !item : item))}
+                                    >
+                                        Select
+                                        {
+                                            isOpenList[idx] ? (
+                                                <AiOutlineCaretDown className="h-5"/>
+                                            ): (
+                                                <AiOutlineCaretUp className="h-5" />
+                                            )
+                                        }
+                                    </button>
+                                    {
+                                        isOpenList[idx] && nftList.filter(item => item.property === order.targetNFTPropertyValue).length > 0 && <div className="border border-purple-400 absolute flex flex-col items-start rounded-md p-2 mt-0.5 bg-white">
+                                            {nftList.filter(item => item.property === order.targetNFTPropertyValue).map((item) => (
+                                                <div key={item.id} className="flex justify-between cursor-pointer hover:bg-purple-200">
+                                                    <button className="text-sm text-purple-400" onClick={(e) => updateOrderTargetNFTID(order, item.id, idx)}>{ReplaceChar(item.id)}</button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    }
+                                    </div>
+                                    }
+                                </td>
                                 <td className="pr-2 text-center">
                                     <button 
                                         className="bg-blue-500 text-white text-sm rounded-xl px-4" 
