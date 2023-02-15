@@ -19,9 +19,6 @@ export default function Home() {
         description: "",
         propertyVal: "",
     });
-    // function remove_leading_zero(address: string) {
-    //     return address.replace(/0x[0]+/, '0x')
-    // }
 
     // 调用合约mint nft
     async function mint_nft() {
