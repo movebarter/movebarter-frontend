@@ -18,7 +18,8 @@ export default function Home() {
     const [orderList, setOrderList] = useState<Array<Order>>([]);
     const [ orderFormInput, updateOrderFormInput ] = useState<OrderForm>({
         baseNFTID: undefined,
-        targetNFTID: undefined,
+        targetNFTID1: undefined,
+        targetNFTID2: undefined,
         targetNFTVal: undefined,
     });
 
@@ -67,30 +68,32 @@ export default function Home() {
         
         const orderListObject = await provider.getObject(orderId)
         
-        const orderIdList = orderListObject.details.data.fields.oids
-        const orderObjects = await provider.getObjectBatch(orderIdList)
+        const orderIdList = orderListObject.details.data?.fields?.oids
+        if (orderIdList) {
+            const orderObjects = await provider.getObjectBatch(orderIdList)
         
-        const orderList = orderObjects.filter(item => item.status === "Exists").map(item => {
-            let id = item.details.data.fields.id.id;
-            let baseNFTId = item.details.data.fields.base_token.fields.id.id;
-            let targetNFTId = item.details.data.fields.target_token_id;
-            let targetNFTPropertyValue = item.details.data.fields.target_property_value;
-
-            let res: Order = {
-                id: id,
-                baseNFTId: baseNFTId,
-                targetNFTId: targetNFTId,
-                targetNFTPropertyValue: targetNFTPropertyValue == null ? "" : String.fromCharCode(...targetNFTPropertyValue),
+            const orderList = orderObjects.filter(item => item.status === "Exists").map(item => {
+                let id = item.details.data.fields.id.id;
+                let baseNFTId = item.details.data.fields.base_token.fields.id.id;
+                let targetNFTId = item.details.data.fields.target_token_id;
+                let targetNFTPropertyValue = item.details.data.fields.target_property_value;
+    
+                let res: Order = {
+                    id: id,
+                    baseNFTId: baseNFTId,
+                    targetNFTId: targetNFTId,
+                    targetNFTPropertyValue: targetNFTPropertyValue == null ? "" : String.fromCharCode(...targetNFTPropertyValue),
+                }
+                return res
+            });
+            const isOpenList: Boolean[] = new Array(orderIdList.length);
+            for (let i = 0; i < orderIdList.length; i++) {
+                isOpenList[i] = false;
             }
-            return res
-        });
-        const isOpenList: Boolean[] = new Array(orderIdList.length);
-        for (let i = 0; i < orderIdList.length; i++) {
-            isOpenList[i] = false;
+            setIsOpenList(isOpenList);
+            setOrderList(orderList);
+            setTx('fetch');
         }
-        setIsOpenList(isOpenList);
-        setOrderList(orderList);
-        setTx('fetch');
     }
 
     // 获取账户下所有的nft
@@ -113,14 +116,22 @@ export default function Home() {
 
     function take_order(order: Order) {
         console.log('order____: ', order);
+
+        const nftids = [];
+        if (order.targetNFTId1) {
+            nftids.push(order.targetNFTId1);
+        }
+        if (order.targetNFTId2) {
+            nftids.push(order.targetNFTId2);
+        }
         return {
             packageObjectId: DAPP_ADDRESS,
             module: 'exchange',
             function: 'take_order',
             typeArguments: [],
             arguments: [
-                "0xff6a149024adb9b3dcf090555c31fb13d1813f0a",
-                order.targetNFTId,
+                "0x7033225e72f75d6d52581837a806b599f7db9132",
+                nftids,
                 order.id,
             ],
             gasBudget: 30000,
@@ -134,7 +145,7 @@ export default function Home() {
             function: 'cancel_order',
             typeArguments: [],
             arguments: [
-                "0xff6a149024adb9b3dcf090555c31fb13d1813f0a",
+                "0x7033225e72f75d6d52581837a806b599f7db9132",
                 order.id
             ],
             gasBudget: 30000,
@@ -142,7 +153,7 @@ export default function Home() {
     }
 
     function submit_order() {
-        const {baseNFTID, targetNFTID, targetNFTVal} = orderFormInput
+        const {baseNFTID, targetNFTID1, targetNFTID2, targetNFTVal} = orderFormInput
         console.log(targetNFTVal);
         let targetNFTValList: any = [];
         if (targetNFTVal != undefined) {
@@ -153,7 +164,7 @@ export default function Home() {
             targetNFTIDList = [targetNFTID];
         }
         let argument: any[] = [
-            "0xff6a149024adb9b3dcf090555c31fb13d1813f0a", // order的地址
+            "0x7033225e72f75d6d52581837a806b599f7db9132", // order的地址
             baseNFTID,
             targetNFTIDList,
             targetNFTValList,
@@ -169,10 +180,15 @@ export default function Home() {
         }
     }
 
-    function updateOrderTargetNFTID(order: Order, id: string, idx: number) {
+    function updateOrderTargetNFTID1(order: Order, id: string, idx: number) {
         setIsOpenList(isOpenList.map((item, idx1) => idx1 == idx ? !item : item))
 
-        order.targetNFTId = id;
+        order.targetNFTId1 = id;
+    }
+    function updateOrderTargetNFTID2(order: Order, id: string, idx: number) {
+        setIsOpenList(isOpenList.map((item, idx1) => idx1 == idx ? !item : item))
+
+        order.targetNFTId2 = id;
     }
 
     useEffect(() => {
@@ -196,10 +212,18 @@ export default function Home() {
                 />
                 <br></br>
                 <input
-                    placeholder="Target NFT ID"
+                    placeholder="Target NFT ID 1"
                     className="mt-8 p-4 input input-bordered input-primary w-full"
                     onChange={(e) =>
-                        updateOrderFormInput({ ...orderFormInput, targetNFTID: e.target.value })
+                        updateOrderFormInput({ ...orderFormInput, targetNFTID1: e.target.value })
+                    }
+                />
+                <br></br>
+                <input
+                    placeholder="Target NFT ID 2"
+                    className="mt-8 p-4 input input-bordered input-primary w-full"
+                    onChange={(e) =>
+                        updateOrderFormInput({ ...orderFormInput, targetNFTID2: e.target.value })
                     }
                 />
                 <br></br>
@@ -224,7 +248,8 @@ export default function Home() {
                 <tr>
                     <th scope="col" className="text-base font-medium text-gray-900 px-6 py-4 text-lef">ID</th>
                     <th scope="col" className="text-base font-medium text-gray-900 px-6 py-4 text-lef">Base NFT ID</th>
-                    <th scope="col" className="text-base font-medium text-gray-900 px-6 py-4 text-lef">Target NFT ID</th>
+                    <th scope="col" className="text-base font-medium text-gray-900 px-6 py-4 text-lef">Target NFT ID1</th>
+                    <th scope="col" className="text-base font-medium text-gray-900 px-6 py-4 text-lef">Target NFT ID2</th>
                     <th scope="col" className="text-base font-medium text-gray-900 px-6 py-4 text-lef">Target NFT Value</th>
                     <th scope="col" className="text-base font-medium text-gray-900 px-6 py-4 text-lef"></th>
                     <th scope="col" className="text-base font-medium text-gray-900 px-6 py-4 text-lef"></th>
@@ -238,7 +263,8 @@ export default function Home() {
                             <tr key={order.id} className="border-b">
                                 <td className="text-sm font-medium text-gray-900 text-center">{ReplaceChar(order.id)}</td>
                                 <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{ReplaceChar(order.baseNFTId)}</td>
-                                <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{ReplaceChar(order.targetNFTId ? order.targetNFTId: "")}</td>
+                                <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{ReplaceChar(order.targetNFTId1 ? order.targetNFTId1: "")}</td>
+                                <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{ReplaceChar(order.targetNFTId2 ? order.targetNFTId2: "")}</td>
                                 <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap text-center">{order.targetNFTPropertyValue ? order.targetNFTPropertyValue : ""}</td>
                                 <td className="pr-2 text-center">
                                     { order.targetNFTPropertyValue == "" ? <div></div> : <div>
@@ -259,7 +285,7 @@ export default function Home() {
                                         isOpenList[idx] && nftList.filter(item => item.property === order.targetNFTPropertyValue).length > 0 && <div className="border border-purple-400 absolute flex flex-col items-start rounded-md p-2 mt-0.5 bg-white">
                                             {nftList.filter(item => item.property === order.targetNFTPropertyValue).map((item) => (
                                                 <div key={item.id} className="flex justify-between cursor-pointer hover:bg-purple-200">
-                                                    <button className="text-sm text-purple-400" onClick={(e) => updateOrderTargetNFTID(order, item.id, idx)}>{ReplaceChar(item.id)}</button>
+                                                    <button className="text-sm text-purple-400" onClick={(e) => updateOrderTargetNFTID1(order, item.id, idx)}>{ReplaceChar(item.id)}</button>
                                                 </div>
                                             ))}
                                         </div>
